@@ -3,14 +3,13 @@ import * as tf from "@tensorflow/tfjs";
 import * as posedetection from "@tensorflow-models/pose-detection";
 
 let webcamElement, canvasElement, ctx, startBtn, stopBtn;
-let countElement, speedElement, loadingElement;
+let countElement, loadingElement;
 
 let isRunning = false;
 let detector;
 let jumpingJackCount = 0;
 let lastPoseState = null;
 let currentPoseState = null;
-let firstJumpingJackTime = null; // To track the time of the first jumping jack
 
 const minConfidence = 0.3;
 
@@ -23,12 +22,9 @@ async function init() {
   startBtn = document.getElementById("startBtn");
   stopBtn = document.getElementById("stopBtn");
   countElement = document.getElementById("count");
-  speedElement = document.getElementById("speed");
   loadingElement = document.getElementById("loading");
 
   try {
-    loadingElement.style.display = "block";
-
     // Initialize the pose detection model (MoveNet)
     detector = await posedetection.createDetector(
       posedetection.SupportedModels.MoveNet
@@ -156,24 +152,12 @@ function detectJumpingJack(pose) {
 
     if (lastPoseState === "down" && currentPoseState === "up") {
       document.body.style.backgroundColor = "lightgreen"; // Up state background
-      if (jumpingJackCount === 0) {
-        firstJumpingJackTime = Date.now(); // Record the time of the first jumping jack
-      }
     } else if (lastPoseState === "up" && currentPoseState === "down") {
       jumpingJackCount++;
       countElement.textContent = jumpingJackCount;
-      updateSpeedDisplay();
       document.body.style.backgroundColor = "lightgreen"; // Down state background
     }
   }
-}
-
-function updateSpeedDisplay() {
-  if (jumpingJackCount === 0) return; // Avoid division by zero
-  const currentTime = Date.now();
-  const elapsedTime = currentTime - firstJumpingJackTime; // Time since the first jumping jack
-  const avgTime = elapsedTime / jumpingJackCount; // Average time per jumping jack
-  speedElement.textContent = Math.round(1000 / avgTime); // Speed in jumps per second
 }
 
 function drawPose(pose) {
@@ -190,19 +174,18 @@ function drawPose(pose) {
       ctx.beginPath();
       ctx.arc(x, y, 5, 0, 2 * Math.PI);
       ctx.fill();
-      ctx.fillStyle = "aqua"; // Reset color for next keypoints
+      ctx.fillStyle = "aqua";
     }
   });
 
-  // Check if any keypoints are below the confidence threshold
   const lowConfidenceKeypoints = pose.keypoints.filter(
     ({ score }) => score < minConfidence
   );
 
   if (lowConfidenceKeypoints.length > 0) {
-    document.body.style.backgroundColor = "lightcoral"; // Error background
+    document.body.style.backgroundColor = "lightcoral";
   } else {
-    document.body.style.backgroundColor = "lightgreen"; // Success background
+    document.body.style.backgroundColor = "lightgreen";
   }
 }
 
