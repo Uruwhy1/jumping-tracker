@@ -1,4 +1,5 @@
 import "./styles.css";
+import "./resize.js";
 import * as tf from "@tensorflow/tfjs";
 import * as posedetection from "@tensorflow-models/pose-detection";
 
@@ -11,7 +12,7 @@ let jumpingJackCount = 0;
 let lastPoseState = null;
 let currentPoseState = null;
 
-const minConfidence = 0.3;
+const minConfidence = 0.4;
 
 async function init() {
   await tf.ready();
@@ -62,6 +63,8 @@ async function startCamera() {
 
     isRunning = true;
     detectPose(); // Start detecting poses
+
+    setupResizeObserver();
   } catch (error) {
     console.error("Error starting camera:", error);
     document.body.style.backgroundColor = "lightcoral"; // Error background
@@ -161,24 +164,58 @@ function detectJumpingJack(pose) {
 }
 
 function drawPose(pose) {
-  ctx.fillStyle = "aqua";
-  pose.keypoints.forEach(({ x, y, score }) => {
+  // Only draw the keypoints used in the jumping jack detection
+  const usedKeypointIndices = [5, 6, 9, 10, 11, 12, 15, 16];
+  const usedKeypointLabels = [
+    "Left Shoulder",
+    "Right Shoulder",
+    "Left Wrist",
+    "Right Wrist",
+    "Left Hip",
+    "Right Hip",
+    "Left Ankle",
+    "Right Ankle",
+  ];
+
+  usedKeypointIndices.forEach((index, i) => {
+    const keypoint = pose.keypoints[index];
+    const { x, y, score } = keypoint;
+
     if (score >= minConfidence) {
       // Draw confident keypoints in aqua
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, 2 * Math.PI);
-      ctx.fill();
-    } else {
-      // Draw low-confidence keypoints in red
-      ctx.fillStyle = "red";
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, 2 * Math.PI);
-      ctx.fill();
       ctx.fillStyle = "aqua";
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fill();
     }
   });
 
-  const lowConfidenceKeypoints = pose.keypoints.filter(
+  // Draw connecting lines
+  ctx.strokeStyle = "yellow";
+  ctx.lineWidth = 2;
+
+  drawLine(pose.keypoints[5], pose.keypoints[6]);
+
+  // hips
+  drawLine(pose.keypoints[11], pose.keypoints[12]);
+
+  // shoulders to wrists (arms)
+  drawLine(pose.keypoints[5], pose.keypoints[9]);
+  drawLine(pose.keypoints[6], pose.keypoints[10]);
+
+  // hips to ankles (legs)
+  drawLine(pose.keypoints[11], pose.keypoints[15]);
+  drawLine(pose.keypoints[12], pose.keypoints[16]);
+
+  // shoulder to hip (torso)
+  drawLine(pose.keypoints[5], pose.keypoints[11]);
+  drawLine(pose.keypoints[6], pose.keypoints[12]);
+
+  // Update background color based on keypoint confidence
+  const usedKeypoints = usedKeypointIndices.map(
+    (index) => pose.keypoints[index]
+  );
+  const lowConfidenceKeypoints = usedKeypoints.filter(
     ({ score }) => score < minConfidence
   );
 
@@ -186,6 +223,15 @@ function drawPose(pose) {
     document.body.style.backgroundColor = "lightcoral";
   } else {
     document.body.style.backgroundColor = "lightgreen";
+  }
+}
+
+function drawLine(point1, point2) {
+  if (point1.score >= minConfidence && point2.score >= minConfidence) {
+    ctx.beginPath();
+    ctx.moveTo(point1.x, point1.y);
+    ctx.lineTo(point2.x, point2.y);
+    ctx.stroke();
   }
 }
 

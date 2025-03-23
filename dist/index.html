@@ -1,35 +1,31 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="utf-8" />
     <title>Jumping Jack Detector</title>
-    <script defer src="bundle.js"></script>
-  </head>
-  <body>
+  <script defer src="bundle.js"></script></head>
+  <body style="background-color: #f7f9fc">
     <div class="container">
       <div class="loading" id="loading">
         <p>Loading models, please wait...</p>
       </div>
-      <div class="controls">
-        <button id="startBtn">Start Camera</button>
-        <button id="stopBtn" disabled>Stop</button>
-      </div>
-
-      <div id="message"></div>
 
       <div class="metrics">
         <div class="metric">
           <div class="metric-value" id="count">0</div>
           <div class="metric-label">Jumping Jacks</div>
         </div>
-        <div class="metric">
-          <div class="metric-value" id="confidence">0%</div>
-          <div class="metric-label">Confidence</div>
-        </div>
-        <div class="metric">
-          <div class="metric-value" id="speed">0</div>
-          <div class="metric-label">Jacks/min</div>
-        </div>
+      </div>
+
+      <div class="controls">
+        <button id="startBtn">Start Camera</button>
+        <button id="stopBtn" disabled>Stop</button>
+      </div>
+
+      <div class="video-container" id="videoContainer">
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
       </div>
     </div>
   </body>

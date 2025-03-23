@@ -29,18 +29,34 @@ body {
 
 /* Video container repositioned to bottom left */
 .video-container {
-  position: absolute;
+  resize: horizontal;
   bottom: 20px;
   left: 20px;
 
+  position: absolute;
   width: 240px;
-  height: 180px;
+  height: auto;
+
+  background-color: #fff;
+  cursor: move;
 
   z-index: 10;
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid #4285f4;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.video-container::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, transparent 50%, #4285f4 50%);
+  cursor: se-resize;
+  pointer-events: none;
 }
 
 #webcam,
